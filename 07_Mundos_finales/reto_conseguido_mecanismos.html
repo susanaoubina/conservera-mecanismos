@@ -1,0 +1,50 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>¡Reto conseguido! · Escape room 360: la conservera de los mecanismos</title>
+<style>
+:root{--bg:#1c130c;--paper:#fbf6ea;--ink:#2b2118;--brand:#7c4a1e;--gold:#c99a2e;--green:#15803d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 0,#4a2f18,#1c130c 70%);color:var(--ink);font:16px/1.55 "Segoe UI",Roboto,Ubuntu,Arial,sans-serif;min-height:100vh}
+canvas#conf{position:fixed;inset:0;pointer-events:none;z-index:9}
+.wrap{max-width:900px;margin:0 auto;padding:28px 16px 50px}
+.top{text-align:center;color:#fde68a}.top h1{font-size:34px;margin:6px 0}.top p{color:#f3e2c0;margin:0}
+.diploma{background:var(--paper);border-radius:14px;padding:30px 34px;margin:24px 0;border:10px double var(--gold);text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.diploma h2{font-family:Georgia,serif;font-size:30px;color:var(--brand);margin:0 0 6px;letter-spacing:1px}
+.diploma .name{font-family:Georgia,serif;font-size:30px;border-bottom:2px solid var(--gold);min-height:46px;margin:14px auto 4px;max-width:520px}
+.diploma .meta{color:#6b5a48;font-size:14px}
+.form{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.form input{padding:9px 12px;border:1px solid #d6c7a8;border-radius:8px;font-size:15px;min-width:200px}
+.btn{border:0;border-radius:9px;padding:10px 16px;font-weight:700;font-size:15px;cursor:pointer;background:var(--brand);color:#fff}
+.card{background:var(--paper);border-radius:14px;padding:22px 26px;margin:0 0 18px}
+.card h3{margin:0 0 10px;color:var(--brand);font-size:21px}
+table{width:100%;border-collapse:collapse;font-size:15px}th,td{border:1px solid #e3d6bb;padding:7px 9px;text-align:left}th{background:#f0e4c8}
+.seal{font-size:52px}
+@media print{body{background:#fff}.top,.card,.form,canvas{display:none}.diploma{box-shadow:none;margin:0}}
+</style></head><body><canvas id="conf"></canvas><div class="wrap">
+<div class="top"><div class="seal">🏅</div><h1>¡Habéis salido de la conservera!</h1><p>Habéis abierto los dos candados de Carme. Ya sabéis cómo se transmite y cómo se transforma el movimiento.</p></div>
+<div class="diploma"><div class="meta">IES da Illa de Arousa · Tecnoloxía e Dixitalización · 2.º ESO</div><h2>DIPLOMA DE MECÁNICA DE LA CONSERVERA</h2>
+<p>Carme, mecánica jefe de la conservera, certifica que</p><div class="name" id="dName">&nbsp;</div><div class="meta" id="dGroup">&nbsp;</div>
+<p>ha superado el <b>Escape room 360: la conservera de los mecanismos</b>, demostrando que sabe calcular relaciones de transmisión y explicar los mecanismos de transformación del movimiento.</p>
+<div class="meta" id="dDate"></div>
+<div class="form"><input id="iName" placeholder="Nombre y apellidos" aria-label="Nombre y apellidos"><input id="iGroup" placeholder="Grupo (p. ej. 2.º ESO B)" aria-label="Grupo"><button class="btn" onclick="window.print()">🖨️ Imprimir / guardar PDF</button></div></div>
+<div class="card"><h3>Lo que habéis aprendido</h3><div style="overflow-x:auto"><table><tr><th>Mecanismo</th><th>Entra</th><th>Sale</th><th>Clave</th></tr>
+<tr><td>Poleas y correa</td><td>Giro</td><td>Giro</td><td>D1·n1 = D2·n2 · cruzada invierte el sentido</td></tr>
+<tr><td>Engranajes</td><td>Giro</td><td>Giro (sentido contrario)</td><td>Z1·n1 = Z2·n2</td></tr>
+<tr><td>Tornillo sin fin-corona</td><td>Giro</td><td>Giro muy lento, ejes a 90°</td><td>n2 = n1·entradas/Z · irreversible</td></tr>
+<tr><td>Junta cardán</td><td>Giro</td><td>Giro con ángulo variable</td><td>Une árboles que forman un ángulo</td></tr>
+<tr><td>Manivela-torno</td><td>Giro</td><td>Lineal (sube la carga)</td><td>VM = R / r</td></tr>
+<tr><td>Piñón-cremallera</td><td>Giro</td><td>Lineal continuo (reversible)</td><td>Avance por vuelta = π·d</td></tr>
+<tr><td>Tornillo-tuerca</td><td>Giro</td><td>Lineal lento con mucha fuerza</td><td>Avance = paso × vueltas · no reversible</td></tr>
+<tr><td>Leva y excéntrica</td><td>Giro</td><td>Lineal alternativo</td><td>Carrera d = R − r</td></tr>
+<tr><td>Biela-manivela</td><td>Giro</td><td>Lineal alternativo (y al revés)</td><td>Carrera = 2 × radio</td></tr>
+<tr><td>Cigüeñal</td><td>Lineal alternativo</td><td>Giro continuo</td><td>Cilindros desfasados</td></tr></table></div></div>
+<div class="card"><h3>🏗️ Reto de proyecto: la grúa del muelle</h3><p>La conservera necesita una pequeña grúa para subir las cajas de latas desde las barcas hasta el muelle. Debe levantar la carga despacio, con poca fuerza del motor y sin que la caja caiga si se corta la corriente.</p><ul><li>Usar un motor pequeño de corriente continua (3–6 V).</li><li>Incluir al menos un mecanismo de transmisión con cálculo de la relación de transmisión (i).</li><li>Garantizar que la carga no baje sola (pista: ¿qué mecanismo era irreversible?).</li><li>Explicar qué movimiento entra y cuál sale en cada mecanismo.</li><li>Documentarlo con la memoria técnica (boceto, cálculos, lista de materiales y normas de seguridad).</li></ul>
+<p><b>Para empezar:</b> en parejas, haced un boceto de la grúa, elegid los mecanismos y calculad la relación de transmisión. Vuestro profesor o profesora os dará la rúbrica de la memoria técnica.</p></div>
+<p style="text-align:center;color:#d9c49a;font-size:13px">Creado por Susana Oubiña Falcón y Claude · Tecnoloxía e Dixitalización 2.º ESO</p></div>
+<script>
+const $=s=>document.querySelector(s);
+function upd(){$('#dName').textContent=$('#iName').value||'\u00a0';$('#dGroup').textContent=$('#iGroup').value||'\u00a0';}
+['#iName','#iGroup'].forEach(s=>$(s).addEventListener('input',upd));
+$('#dDate').textContent='Illa de Arousa, '+new Date().toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'});
+(function(){const c=$('#conf'),x=c.getContext('2d');let W,H;const r=()=>{W=c.width=innerWidth;H=c.height=innerHeight};r();addEventListener('resize',r);
+if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+const cols=['#c99a2e','#15803d','#2563eb','#dc2626','#f59e0b'];const P=[...Array(160)].map(()=>({x:Math.random()*W,y:-Math.random()*H,v:2+Math.random()*3,a:Math.random()*6,s:5+Math.random()*6,c:cols[Math.floor(Math.random()*5)]}));
+let t=0;(function f(){x.clearRect(0,0,W,H);P.forEach(p=>{p.y+=p.v;p.a+=.08;x.save();x.translate(p.x+Math.sin(p.a)*8,p.y);x.rotate(p.a);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore();});if(++t<420)requestAnimationFrame(f);else x.clearRect(0,0,W,H);})();})();
+</script></body></html>
