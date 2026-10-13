@@ -80,6 +80,9 @@ body.edit #cross{display:block}
 @media (max-width:600px){#topbar h1{font-size:14px;width:100%}#bar{width:90px}.mk.img .card{width:84px}.modal .body{font-size:15px}}
 @media (prefers-reduced-motion:reduce){.mk .dot{animation:none}}
 .modal.noclose .close{display:none}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%) translateY(-20px);background:#16a34a;color:#fff;font-weight:700;padding:12px 20px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:30;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.retost{padding:10px 12px;border-radius:8px;margin:10px 0;font-size:15px}.retost.ok{background:#EAF3DE;color:#27500A}.retost.no{background:#FFF4DB;color:#7a4b00}
 /* Carme habla dentro de la escena (vídeo inmersivo) */
 .mk.pj .live{display:none;height:100%;width:auto;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55))}
 .mk.pj.talking img{display:none}.mk.pj.talking .live{display:block}
@@ -112,11 +115,12 @@ body.pjtalk #pjbar{display:flex}body.pjtalk #hint{display:none}
   <div class="body">
     <p id="sCtx"></p>
     <p><b>Tu misión:</b> <span id="sMision"></span></p>
-    <p style="font-size:14px;color:var(--muted)">👩‍🔧 Carme (pulsa sobre ella) · 🔵 Información · <span id="legSim">🟢 Simulador · </span>🖼️ Imagen · 🟠 Audio de Carme · 🔒 Candado (se activa al explorar)</p>
+    <p style="font-size:14px;color:var(--muted)">👩‍🔧 Carme (pulsa sobre ella) · 🔵 Información · <span id="legSim">🟢 Simulador · </span>🖼️ Imagen · 🟠 Audio de Carme · 🔒 Candado (se abre al resolver todos los retos)</p>
     <button class="btn pri" id="bStart">▶ Entrar en el mundo</button>
   </div>
 </div></div>
 
+<div id="toast"></div>
 <div id="pjbar"><div id="pjsub"></div><div class="pjbtns"><button class="tb" id="pjPause">⏸ Pausa</button><button class="tb" id="pjEnd">⏹ Terminar</button></div></div>
 <div class="overlay" id="ov"><div class="modal" id="ovm"><button class="close" aria-label="Cerrar" data-close>✕</button><div id="ovc"></div></div></div>
 
@@ -191,6 +195,12 @@ const LEGX = (W.elementos.some(e=>e.tipo==='hotspot'&&/recursos\//.test(e.url||'
 try{ document.getElementById('legSim').textContent=LEGX.replace('⚙ ',''); }catch(e){}
 const LAMS = W.laminas_obligatorias ? W.elementos.filter(e=>e.tipo==='imagen') : [];
 function faltanLam(){ return LAMS.filter(e=>!done.has(e.id)); }
+/* Retos de las fichas: el punto solo se marca ✓ cuando la ficha avisa de que se ha conseguido la letra/número/clave. */
+const RETOS = W.elementos.filter(e=>e.tipo==='hotspot' && /Recursos_independientes_html\//.test(e.url||''));
+const NUMW = RETOS.some(e=>/codigo_secreto/.test(e.url));
+RETOS.forEach(e=>{ e.reto=true; e.retoFile=decodeURIComponent(e.url.split('/').pop()); e.premio = e.requiere_imagenes ? 'la clave del candado' : (NUMW?'el número':'la letra');
+  try{ localStorage.removeItem('conservera_reto_'+e.retoFile); }catch(x){} });
+function faltanRetos(){ return RETOS.filter(e=>!done.has(e.id)); }
 function avisoImagenes(titulo){ const fl=faltanLam(); if(!fl.length) return false;
   const frase='Todavía no habéis mirado todas las imágenes de la sala.'; sfx('error');
   showOv('<header><h2>🔒 '+esc(titulo)+'</h2></header><div class="body">'+(W.personaje?'<img class="avatar" alt="" src="'+W.personaje.avatar+'">':'')+'<p class="lockmsg"><b>Carme:</b> «'+frase+'»</p><p style="font-size:14px;color:var(--muted)">Imágenes vistas: '+(LAMS.length-fl.length)+' de '+LAMS.length+'. Buscad los marcos 🖼️ de las paredes y abridlos.</p><button class="btn sec" data-close>Volver a explorar</button></div>');
@@ -219,9 +229,18 @@ function refreshState(){
   $('#ptext').textContent = 'Pistas exploradas: '+n+'/'+explorables.length;
   $('#bar i').style.width = (100*n/explorables.length)+'%';
   W.elementos.filter(e=>e.requiere_imagenes).forEach(e=>{ const dt=e._el.querySelector('.dot'); if(e._ic===undefined) e._ic=dt.textContent; const lk=faltanLam().length>0; dt.textContent=lk?'🔒':e._ic; e._el.classList.toggle('locked',lk); });
-  W.elementos.filter(e=>e.tipo==='cuestionario').forEach(q=>{ const locked=n<NEED || faltanLam().length>0; q._el.classList.toggle('locked',locked); q._el.querySelector('.dot').textContent = locked?'🔒':'🔓'; });
+  W.elementos.filter(e=>e.tipo==='cuestionario').forEach(q=>{ const locked=faltanRetos().length>0 || faltanLam().length>0; q._el.classList.toggle('locked',locked); q._el.querySelector('.dot').textContent = locked?'🔒':'🔓'; });
 }
 function mark(el){ if(el.tipo==='cuestionario') return; sfx('pista'); done.add(el.id); store.set([...done]); refreshState(); }
+let toastT=0;
+function toast(t){ const d=$('#toast'); d.textContent=t; d.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>d.classList.remove('show'),4000); }
+function retoHecho(file){ const e=RETOS.find(r=>r.retoFile===file); if(!e || done.has(e.id)) return; mark(e);
+  toast('✓ '+e.etiqueta+': ¡reto conseguido!'+(faltanRetos().length?' Quedan '+faltanRetos().length+' retos.':' ¡Todos los retos resueltos!')); }
+function scanRetos(){ RETOS.forEach(e=>{ try{ if(localStorage.getItem('conservera_reto_'+e.retoFile)) retoHecho(e.retoFile); }catch(x){} }); }
+addEventListener('message', ev=>{ if(ev.data && ev.data.conservera) retoHecho(ev.data.conservera); });
+try{ new BroadcastChannel('conservera').onmessage = ev=>{ if(ev.data && ev.data.conservera) retoHecho(ev.data.conservera); }; }catch(x){}
+addEventListener('storage', ev=>{ if(ev.key && ev.key.indexOf('conservera_reto_')===0 && ev.newValue) retoHecho(ev.key.slice(16)); });
+addEventListener('focus', scanRetos); document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) scanRetos(); });
 
 /* ---------- overlay ---------- */
 const ov=$('#ov'), ovc=$('#ovc'), ovm=$('#ovm');
@@ -236,7 +255,7 @@ function showVideo(el, titulo, subt){
 function closeOv(){ const _v=ovc.querySelector('video'); if(_v){ _v.pause(); } ov.classList.remove('show'); stopSpeech(); if(curAudio){ curAudio.pause(); curAudio=null; } }
 ov.addEventListener('click', e=>{ if(e.target===ov || (e.target.closest && e.target.closest('[data-close]'))) closeOv(); });
 const esc = s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function linkBtn(url, txt){ return url ? '<a class="btn pri" href="'+esc(url)+'" target="_blank" rel="noopener">'+txt+'</a>' : ''; }
+function linkBtn(url, txt, opener){ return url ? '<a class="btn pri" href="'+esc(url)+'" target="_blank"'+(opener?'':' rel="noopener"')+'>'+txt+'</a>' : ''; }
 
 function open(el){
   if(EDIT) return;
@@ -248,6 +267,11 @@ function open(el){
   }
   if(el.tipo==='hotspot'){
     if(el.requiere_imagenes && avisoImagenes(el.etiqueta)) return;
+    if(el.reto){
+      const ok=done.has(el.id);
+      showOv('<header><h2>'+esc(el.etiqueta)+'</h2></header><div class="body"><p>'+esc(el.texto)+'</p><div class="retost '+(ok?'ok':'no')+'">'+(ok?'✅ <b>Reto resuelto.</b> Ya tenéis '+el.premio+'.':'📝 Abrid la ficha y resolved su reto para conseguir <b>'+el.premio+'</b>. Cuando lo consigáis, este punto se marcará ✓ automáticamente.')+'</div>'+linkBtn(el.url, ok?'📄 Volver a abrir la ficha':'📝 Abrir la ficha y resolver el reto', true)+'<button class="btn sec" data-close>Seguir explorando</button></div>');
+      return;
+    }
     showOv('<header><h2>'+esc(el.etiqueta)+'</h2></header><div class="body"><p>'+esc(el.texto)+'</p>'+linkBtn(el.url, /recursos\//.test(el.url)?'⚙ Abrir el simulador':'🔗 Abrir el recurso')+'<button class="btn sec" data-close>Seguir explorando</button></div>');
     mark(el);
   } else if(el.tipo==='imagen'){
@@ -258,7 +282,8 @@ function open(el){
     showAudio(el.etiqueta, el.audio, el.guion); mark(el);
   } else if(el.tipo==='cuestionario'){
     const n=explorables.filter(e=>done.has(e.id)).length;
-    if(n<NEED){ showOv('<header><h2>🔒 '+esc(el.titulo)+'</h2></header><div class="body"><p class="lockmsg">El candado aún está bloqueado. Explora al menos <b>'+NEED+'</b> pistas de la sala (llevas '+n+'). Cuando esté desbloqueado verás un candado abierto 🔓.</p><button class="btn sec" data-close>Volver a explorar</button></div>'); return; }
+    const fr=faltanRetos();
+    if(fr.length){ sfx('error'); showOv('<header><h2>🔒 '+esc(el.titulo)+'</h2></header><div class="body"><p class="lockmsg"><b>Carme:</b> «El candado no se abre hasta que resolváis todos los retos de la sala.»</p><p style="font-size:15px">Retos resueltos: <b>'+(RETOS.length-fr.length)+' de '+RETOS.length+'</b>. Os faltan:</p><ul style="font-size:15px;margin-top:0">'+fr.map(e=>'<li>'+esc(e.etiqueta)+'</li>').join('')+'</ul><p style="font-size:14px;color:var(--muted)">Cada interrogante se marca ✓ cuando conseguís su '+(NUMW?'número':'letra')+' en la ficha'+(RETOS.some(e=>e.requiere_imagenes)?', y «'+esc(RETOS.find(e=>e.requiere_imagenes).etiqueta.split(':')[0])+'» cuando desciframos correctamente la clave':'')+'.</p><button class="btn sec" data-close>Volver a explorar</button></div>'); return; }
     if(avisoImagenes(el.titulo)) return;
     showQuiz(el);
   }
@@ -384,7 +409,7 @@ let bg=null;
 $('#bAudio').onclick=()=>{ if(INM){ pjStart(); return; } const pj=W.personaje; if(pj&&pj.video) showVideo(Object.assign({nombre:pj.nombre},pj)); else showAudio('Bienvenida de Carme', W.audio_fondo.src, W.audio_fondo.guion); };
 $('#bLabels').onclick=()=>document.body.classList.toggle('labels');
 $('#bFull').onclick=()=>{ if(!document.fullscreenElement){ (document.documentElement.requestFullscreen||function(){}).call(document.documentElement); } else document.exitFullscreen(); };
-$('#bHelp').onclick=()=>showOv('<header><h2>Cómo moverte</h2></header><div class="body"><p>🖱️ Arrastra (o desliza el dedo) para mirar alrededor. Rueda del ratón o pellizco para acercar. Flechas del teclado también funcionan.</p><p>🔵 Información · '+LEGX+'🖼️ Imagen ampliable · 🟠 Audio de Carme con subtítulos · 🔒 Candado.</p><p>El candado se desbloquea cuando exploras al menos <b>'+NEED+'</b> pistas. Al cerrar o recargar el mundo, las pistas vuelven a empezar.</p><button class="btn pri" data-close>Entendido</button></div>');
+$('#bHelp').onclick=()=>showOv('<header><h2>Cómo moverte</h2></header><div class="body"><p>🖱️ Arrastra (o desliza el dedo) para mirar alrededor. Rueda del ratón o pellizco para acercar. Flechas del teclado también funcionan.</p><p>🔵 Información · '+LEGX+'🖼️ Imagen ampliable · 🟠 Audio de Carme con subtítulos · 🔒 Candado.</p><p>Cada interrogante se marca ✓ solo cuando resolvéis el reto de su ficha. El candado se desbloquea cuando habéis resuelto <b>todos los retos</b> y mirado <b>todas las imágenes</b>. Al cerrar o recargar el mundo, todo vuelve a empezar.</p><button class="btn pri" data-close>Entendido</button></div>');
 document.addEventListener('click', e=>{ if(e.target.id==='bReset'){ done.clear(); store.set([]); refreshState(); closeOv(); } });
 document.addEventListener('click', e=>{ const a=e.target.closest&&e.target.closest('#bNext'); if(a && W.sfx && W.sfx.puerta && sonidoOn){ e.preventDefault(); const go=()=>{ location.href=a.getAttribute('href'); }; let done=false; const once=()=>{ if(!done){ done=true; go(); } }; try{ const d=new Audio(W.sfx.puerta); d.volume=0.8; d.onended=once; d.play().catch(once); }catch(x){ once(); } if(amb) fadeTo(0,1500); setTimeout(once, 9000); } });
 $('#bStart').onclick=()=>{ ambStart(); $('#start').classList.remove('show'); if(INM){ pjStart(); return; } const pj=W.personaje; if(pj&&pj.video) showVideo(Object.assign({nombre:pj.nombre},pj)); else showAudio('Bienvenida de Carme', W.audio_fondo.src, W.audio_fondo.guion); };

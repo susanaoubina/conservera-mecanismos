@@ -269,7 +269,7 @@ function initReto(cfg){ RETO=cfg; var h='';
     fb.className='rfb'; fb.textContent=''; RETO_OK=true; premio(); };
 }
 function liveReto(){ if(!RETO) return; RETO.checks.forEach(function(c,i){ var ok=c.f(), li=$('rk'+i); li.className=ok?'ok':''; li.firstChild.textContent=ok?'✔':'○'; }); }
-function premio(){ var tot=RETO.total||5, L=RETO.num?String(RETO.k^37):String.fromCharCode(RETO.k^37), pos=RETO.pos, p=$('prem');
+function premio(){ avisarMundo(); var tot=RETO.total||5, L=RETO.num?String(RETO.k^37):String.fromCharCode(RETO.k^37), pos=RETO.pos, p=$('prem');
   $('tile').textContent=L; if(RETO.num) $('tile').style.fontSize='54px'; var sl=''; for(var i=1;i<=tot;i++) sl+='<div class="'+(i===pos?'me':'')+'">'+(i===pos?L:'')+'</div>';
   $('slots').innerHTML=sl; p.classList.remove('show'); void p.offsetWidth; p.classList.add('show'); p.scrollIntoView({behavior:'smooth',block:'center'}); }
 
@@ -641,6 +641,15 @@ initReto({k:62,pos:4,num:true,total:6,checks:[
  extra:function(){ return $('rsel').value==='1' ? true : 'el martillo ya funciona, pero revisa qué pieza mantiene el seguidor pegado a la leva.'; }});
 update();
 
+</script>
+<script>
+/* Aviso al mundo 360: cuando se consigue la letra/número (o se descifra la clave), el punto del mundo se marca como resuelto. */
+function avisarMundo(){
+  var f = decodeURIComponent(location.pathname.split('/').pop());
+  try{ localStorage.setItem('conservera_reto_'+f, String(Date.now())); }catch(e){}
+  try{ var bc=new BroadcastChannel('conservera'); bc.postMessage({conservera:f}); bc.close(); }catch(e){}
+  try{ if(window.opener) window.opener.postMessage({conservera:f}, '*'); }catch(e){}
+}
 </script>
 </body>
 </html>

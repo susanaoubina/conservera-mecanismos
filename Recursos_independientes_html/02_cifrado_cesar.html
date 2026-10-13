@@ -663,7 +663,7 @@ $('dbtn').onclick=function(){
   if(!K_OK){ r.className='dres show bad'; r.innerHTML='Primero resuelve la operación del paso 1: sin el número K no sabrás cuánto girar el disco.'; return; }
   if(m.indexOf('·')>=0){ r.className='dres show bad'; r.innerHTML='Faltan letras: escribe las 5 letras de las fichas en el paso 2.'; return; }
   var d=cesarDec(m,k), okM=true; for(var i=0;i<5;i++) if(m.charCodeAt(i)!==(CX[i]^37)) okM=false;
-  if(k===kSecret() && okM){ r.className='dres show good'; r.innerHTML='<div style="font-size:13px;letter-spacing:2px;text-transform:uppercase">Mensaje descifrado</div><div class="big">'+d+'</div><div>¡Esta es la <b>clave del candado</b>! Vuelve al Mundo 1 y ábrelo.</div>'; r.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+  if(k===kSecret() && okM){ avisarMundo(); r.className='dres show good'; r.innerHTML='<div style="font-size:13px;letter-spacing:2px;text-transform:uppercase">Mensaje descifrado</div><div class="big">'+d+'</div><div>¡Esta es la <b>clave del candado</b>! Vuelve al Mundo 1 y ábrelo.</div>'; r.scrollIntoView({behavior:'smooth',block:'center'}); return; }
   r.className='dres show bad';
   if(k!==kSecret()) r.innerHTML='Con K = '+k+' sale <b>'+d+'</b>, que no significa nada. '+(K_OK?'Gira el disco hasta el número K que calculaste en el paso 1.':'Resuelve primero la operación del paso 1 para saber cuánto vale K.');
   else r.innerHTML='Con K = '+k+' sale <b>'+d+'</b>, que no significa nada. Revisa las letras: ¿están todas en la casilla de su posición?';
@@ -671,6 +671,15 @@ $('dbtn').onclick=function(){
 $('kSlider').addEventListener('input',updateDisc);
 buildDiscs(); buildSlots(); updateDisc();
 
+</script>
+<script>
+/* Aviso al mundo 360: cuando se consigue la letra/número (o se descifra la clave), el punto del mundo se marca como resuelto. */
+function avisarMundo(){
+  var f = decodeURIComponent(location.pathname.split('/').pop());
+  try{ localStorage.setItem('conservera_reto_'+f, String(Date.now())); }catch(e){}
+  try{ var bc=new BroadcastChannel('conservera'); bc.postMessage({conservera:f}); bc.close(); }catch(e){}
+  try{ if(window.opener) window.opener.postMessage({conservera:f}, '*'); }catch(e){}
+}
 </script>
 </body>
 </html>
